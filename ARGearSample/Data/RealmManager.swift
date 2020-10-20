@@ -54,6 +54,7 @@ class RealmManager {
             }
             return
         }
+        debugPrint("martino category data \(categoriesData)")
 
         // check last_updated_at
         let localLastUpdatedAt = UserDefaults.standard.integer(forKey: "last_updated_at")

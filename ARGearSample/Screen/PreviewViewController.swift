@@ -24,7 +24,6 @@ class PreviewViewController: UIViewController {
     @IBOutlet weak var fullImageView: UIImageView!
     @IBOutlet weak var ratio43ImageView: UIImageView!
     @IBOutlet weak var ratio11ImageView: UIImageView!
-    @IBOutlet weak var lfview: UIView!
     
     @IBOutlet weak var previewBottomFunctionView: PreviewBottomFunctionView!
     
@@ -35,7 +34,7 @@ class PreviewViewController: UIViewController {
     
     var media: ARGMedia?
     var ratio: ARGMediaRatio = ._4x3
-    var mode: ARGMediaMode = .video
+    var mode: ARGMediaMode = .photo
     
     override func viewDidLoad() {
         super.viewDidLoad()

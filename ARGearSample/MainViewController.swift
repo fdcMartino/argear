@@ -11,8 +11,7 @@ import CoreMedia
 import SceneKit
 import AVFoundation
 import ARGear
-import HaishinKit
-
+import RealmSwift
 public final class MainViewController: UIViewController {
     
     var toast_main_position = CGPoint(x: 0, y: 0)
@@ -24,9 +23,6 @@ public final class MainViewController: UIViewController {
     private var nextFaceFrame: ARGFrame?
     private var preferences: ARGPreferences = ARGPreferences()
     
-    // - views
-    @IBOutlet weak var publishButton: UIButton!
-    
     // MARK: - Camera & Scene properties
     private let serialQueue = DispatchQueue(label: "serialQueue")
     private var currentCamera: CameraDeviceWithPosition = .front
@@ -37,17 +33,9 @@ public final class MainViewController: UIViewController {
     
     private lazy var cameraPreviewCALayer = CALayer()
     
-    // - rtmp variables
-    private var rtmpConnection = RTMPConnection()
-    private var rtmpStream: RTMPStream!
-    private var sharedObject: RTMPSharedObject!
-    private var currentEffect: VideoEffect?
-    private var currentPosition: AVCaptureDevice.Position = .front
-    private var retryCount: Int = 0
-    
     // MARK: - Functions UI
-//    @IBOutlet weak var filterCancelLabel: UILabel!
-//    @IBOutlet weak var contentCancelLabel: UILabel!
+    @IBOutlet weak var filterCancelLabel: UILabel!
+    @IBOutlet weak var contentCancelLabel: UILabel!
     
     // MARK: - UI
     @IBOutlet weak var splashView: SplashView!
@@ -60,46 +48,10 @@ public final class MainViewController: UIViewController {
     
     private var argObservers = [NSKeyValueObservation]()
     
-    // AVAudtionSession HaishinKit
-    let session = AVAudioSession.sharedInstance()
-    
-    
     // MARK: - Lifecycles
     override public func viewDidLoad() {
       super.viewDidLoad()
         
-        // HaishinKit
-        do {
-            // https://stackoverflow.com/questions/51010390/avaudiosession-setcategory-swift-4-2-ios-12-play-sound-on-silent
-            if #available(iOS 10.0, *) {
-                try session.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
-            } else {
-                session.perform(NSSelectorFromString("setCategory:withOptions:error:"), with: AVAudioSession.Category.playAndRecord, with: [
-                    AVAudioSession.CategoryOptions.allowBluetooth,
-                    AVAudioSession.CategoryOptions.defaultToSpeaker]
-                )
-                try session.setMode(.default)
-            }
-            try session.setActive(true)
-        } catch {
-            print(error)
-        }
-        // - set rtmp stream
-        rtmpStream = RTMPStream(connection: rtmpConnection)
-        rtmpStream.orientation = AVCaptureVideoOrientation.portrait
-
-        // - capture settings
-        rtmpStream.captureSettings = [
-         .sessionPreset: AVCaptureSession.Preset.medium
-        ]
-
-        // - video settings
-        rtmpStream.videoSettings = [
-         .width: 720,
-         .height: 1280
-        ]
-     
-             
         setupARGearConfig()
         setupScene()
         setupCamera()
@@ -109,24 +61,19 @@ public final class MainViewController: UIViewController {
         initHelpers()
         connectAPI()
         
-//        rtmpStream.attachCamera(arCamera.cameraDevice) { error in
-//             print("martino debug \(error)")
+        print("martino realm path\(Realm.Configuration.defaultConfiguration.fileURL!)")
+        // delete realm file
+        
+//        let realm = try! Realm()
+//        try! realm.write {
+//          realm.deleteAll()
 //        }
-        // iOS
-        //rtmpStream.attachScreen(ScreenCaptureSession(shared: UIApplication.shared))
     }
-    // - on disappear
-       // - clean stream
-   override public func viewWillDisappear(_ animated: Bool) {
-       super.viewWillDisappear(animated)
-       rtmpStream.close()
-       rtmpStream.dispose()
-   }
 
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        
+        // try! FileManager.default.removeItem(at: Realm.Configuration.defaultConfiguration.fileURL!)
         runARGSession()
         
     }
@@ -134,9 +81,6 @@ public final class MainViewController: UIViewController {
     override public func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         stopARGSession()
-        
-        rtmpStream.close()
-        rtmpStream.dispose()
     }
 
     deinit {
@@ -145,36 +89,20 @@ public final class MainViewController: UIViewController {
     
     private func initHelpers() {
         NetworkManager.shared.argSession = self.argSession
+        BeautyManager.shared.argSession = self.argSession
         FilterManager.shared.argSession = self.argSession
-    }
-    
-    /**
-       HAISHINkit
-        delegates
-        */
-    @objc
-    private func rtmpStatusHandler(_ notification: Notification) {
-       let e = Event.from(notification)
-       guard let data: ASObject = e.data as? ASObject, let code: String = data["code"] as? String else {
-           return
-       }
-       
-       debugPrint(code)
-    }
-
-    @objc
-    private func rtmpErrorHandler(_ notification: Notification) {
+        ContentManager.shared.argSession = self.argSession
+        BulgeManager.shared.argSession = self.argSession
+        
+        BeautyManager.shared.start()
     }
     
     // MARK: - connect argear API
     private func connectAPI() {
         
         NetworkManager.shared.connectAPI { (result: Result<[String: Any], APIError>) in
-            debugPrint("result martino--\(result)")
             switch result {
-                
             case .success(let data):
-                debugPrint("result martino data--\(data)")
                 RealmManager.shared.setARGearData(data) { [weak self] success in
                     guard let self = self else { return }
 
@@ -195,38 +123,12 @@ public final class MainViewController: UIViewController {
     
     private func loadAPIData() {
         DispatchQueue.main.async {
-           // let categories = RealmManager.shared.getCategories()
+            let categories = RealmManager.shared.getCategories()
             
-//            self.mainBottomFunctionView.contentView.contentsCollectionView.contents = categories
-//            self.mainBottomFunctionView.contentView.contentTitleListScrollView.contents = categories
+            self.mainBottomFunctionView.contentView.contentsCollectionView.contents = categories
+            self.mainBottomFunctionView.contentView.contentTitleListScrollView.contents = categories
             self.mainBottomFunctionView.filterView.filterCollectionView.filters = RealmManager.shared.getFilters()
         }
-    }
-   
-    @IBAction func publish(_ publish: UIButton) {
-        if publish.isSelected {
-               UIApplication.shared.isIdleTimerDisabled = false
-               rtmpConnection.close()
-               rtmpConnection.removeEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self)
-               rtmpConnection.removeEventListener(.ioError, selector: #selector(rtmpErrorHandler), observer: self)
-            publish.setTitle("●", for: [])
-        } else {
-            UIApplication.shared.isIdleTimerDisabled = true
-            rtmpConnection.addEventListener(.rtmpStatus, selector: #selector(rtmpStatusHandler), observer: self)
-            rtmpConnection.addEventListener(.ioError, selector: #selector(rtmpErrorHandler), observer: self)
-            // - attach audio
-            rtmpStream.attachAudio(AVCaptureDevice.default(for: .audio)) { error in
-            }
-            // - attach screen
-            rtmpStream.attachScreen(ScreenCaptureSession(shared: UIApplication.shared))
-           
-            rtmpConnection.connect("rtmp://13.73.1.230:1935/live/")
-            rtmpStream.publish("martino_sample")
-            
-            publish.setTitle("■", for: [])
-        }
-
-        publish.isSelected.toggle()
     }
     
     // MARK: - ARGearSDK setupConfig
@@ -313,7 +215,7 @@ public final class MainViewController: UIViewController {
     private func setupUI() {
 
         self.mainTopFunctionView.delegate = self
-        //self.mainBottomFunctionView.delegate = self
+        self.mainBottomFunctionView.delegate = self
         self.settingView.delegate = self
         
         self.ratioView.setRatio(arCamera.ratio)
@@ -599,3 +501,79 @@ extension MainViewController: MainTopFunctionDelegate {
     }
 }
 
+// MARK: - MainBottomFunction Delegate
+extension MainViewController: MainBottomFunctionDelegate {
+    func photoButtonAction(_ button: UIButton) {
+        self.arMedia.takePic { image in
+            self.photoButtonActionFinished(image: image)
+        }
+    }
+    
+    func videoButtonAction(_ button: UIButton) {
+        if button.tag == 0 {
+            // start record
+            button.tag = 1
+            self.mainTopFunctionView.disableButtons()
+            self.arMedia.recordVideoStart { [weak self] recTime in
+                guard let self = self else { return }
+
+                DispatchQueue.main.async {
+                    self.mainBottomFunctionView.setRecordTime(Float(recTime))
+                }
+            }
+        } else {
+            // stop record
+            ARGLoading.show()
+            button.tag = 0
+            self.mainTopFunctionView.enableButtons()
+            self.arMedia.recordVideoStop({ tempFileInfo in
+            }) { resultFileInfo in
+                ARGLoading.hide()
+                if let info = resultFileInfo as? Dictionary<String, Any> {
+                    self.videoButtonActionFinished(videoInfo: info)
+                }
+            }
+        }
+    }
+    
+    func photoButtonActionFinished(image: UIImage?) {
+        guard let saveImage = image else { return }
+        
+        self.arMedia.save(saveImage, saved: {
+            self.view.showToast(message: "photo_video_saved_message".localized(), position: self.toast_main_position)
+        }) {
+            self.goPreview(content: saveImage)
+        }
+    }
+    
+    func videoButtonActionFinished(videoInfo: Dictionary<String, Any>?) {
+        guard let info = videoInfo else { return }
+        
+        self.arMedia.saveVideo(info, saved: {
+            self.view.showToast(message: "photo_video_saved_message".localized(), position: self.toast_main_position)
+        }) {
+            self.goPreview(content: info)
+        }
+    }
+    
+    func goPreview(content: Any) {
+        self.performSegue(withIdentifier: "toPreviewSegue", sender: content)
+    }
+    
+    override public func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "toPreviewSegue" {
+            if let previewController = segue.destination as? PreviewViewController {
+                previewController.ratio = self.arCamera.ratio
+                previewController.media = self.arMedia
+                
+                if let image = sender as? UIImage {
+                    previewController.mode = .photo
+                    previewController.previewImage = image
+                } else if let videoInfo = sender as? [String: Any] {
+                    previewController.mode = .video
+                    previewController.videoInfo = videoInfo
+                }
+            }
+        }
+    }
+}

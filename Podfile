@@ -15,5 +15,5 @@ target 'ARGearSample' do
   pod 'RealmSwift'
   pod 'SDWebImage', '~> 5.0'
   pod 'Toast-Swift', '~> 5.0.1'
-  pod 'HaishinKit', '~> 1.0.12'
+
 end

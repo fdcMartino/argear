@@ -10,10 +10,22 @@ import Foundation
 import ARGear
 
 let API_HOST = "https://apis.argear.io/api/v3/"
-let API_KEY = "48cdd456621ebddb5283f516"
+let API_KEY = "442e24a6fdd84cb76a3ac6bf"
 let API_SECRET_KEY = "e0ea29ce12178111d2a5e6093a6e048a2a6248b921f092f68c93992ca29a45ee"
-let API_AUTH_KEY = "U2FsdGVkX19Sm4NdLCm7kZRApYCcdTaQqY7RbgodU5GHd9plkoHb24uqdAv0MICHb1aldMXpCHccDDeCTWqq/A=="
+let API_AUTH_KEY = "U2FsdGVkX19P8bGpkPsXdEoyyvYH8CYrklfVO5LWPoQKDadC+lfoIQj9eHl1RWhCVO0bdT1v9IERuagZOQnVhA=="
 
+/*
+API Key
+442e24a6fdd84cb76a3ac6bf
+Secret Key
+d18d27ce68450cc962046818b114accce2901cba5ea6cd4963d19efe11f523e3
+Auth Key
+
+Bundle Identifier
+pre.fdc.talk.broadcaster
+ 
+ 
+ */
 enum APIError: Error {
     case network
     case data
@@ -36,8 +48,8 @@ class NetworkManager {
     }
     
     func connectAPI(completion: @escaping (Result<[String: Any], APIError>) -> Void) {
-        
-        let urlString = API_HOST + API_KEY
+        let staging = "?dev=true"
+        let urlString = API_HOST + API_KEY + staging
         let url = URL(string: urlString)!
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let _ = error {
@@ -50,7 +62,9 @@ class NetworkManager {
                 guard let json: [String : Any] = try? JSONSerialization.jsonObject(with: data, options: []) as? [String : Any] else {
                     return completion(.failure(.serializeJSON))
                 }
-                
+                debugPrint("martino_debug json  \(json)")
+                debugPrint("martino_debug data  \(data)")
+                debugPrint("martino_debug response  \(response)")
                 completion(.success(json))
             }
         }
