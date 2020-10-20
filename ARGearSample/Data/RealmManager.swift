@@ -78,7 +78,7 @@ class RealmManager {
                 guard let title = category["title"] as? String
                     else { return }
                 
-                if title == "filters" {
+                if title == "machetalk" {
                     // insert filter category
                     let filtersData = Filter()
                     filtersData.data = category

@@ -24,13 +24,26 @@ class FilterManager {
         }
         
         if RealmManager.shared.getIsDownloaded(item: filter) {
-            contents.setItemWith(.filter, withItemFilePath: nil, withItemID: uuid) { (success, msg) in
-                if (success) {
-                    successBlock()
-                } else {
-                    failBlock()
+            debugPrint("martino filter \(filter)")
+            
+            if filter.type == "filter" {
+                contents.setItemWith(.filter, withItemFilePath: nil, withItemID: uuid) { (success, msg) in
+                    if (success) {
+                        successBlock()
+                    } else {
+                        failBlock()
+                    }
+                }
+            } else if filter.type == "sticker/effects" {
+                contents.setItemWith(.sticker, withItemFilePath: nil, withItemID: uuid) { (success, msg) in
+                    if (success) {
+                        successBlock()
+                    } else {
+                        failBlock()
+                    }
                 }
             }
+            
         } else {
             ARGLoading.show()
             NetworkManager.shared.downloadItem(filter) { (result: Result<URL, DownloadError>) in
