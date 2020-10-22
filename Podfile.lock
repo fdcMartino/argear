@@ -1,4 +1,7 @@
 PODS:
+  - HaishinKit (1.0.13):
+    - Logboard (~> 2.1.3)
+  - Logboard (2.1.3)
   - Realm (5.5.0):
     - Realm/Headers (= 5.5.0)
   - Realm/Headers (5.5.0)
@@ -10,23 +13,28 @@ PODS:
   - Toast-Swift (5.0.1)
 
 DEPENDENCIES:
+  - HaishinKit (~> 1.0.12)
   - RealmSwift
   - SDWebImage (~> 5.0)
   - Toast-Swift (~> 5.0.1)
 
 SPEC REPOS:
   https://github.com/cocoapods/specs.git:
+    - HaishinKit
+    - Logboard
     - Realm
     - RealmSwift
     - SDWebImage
     - Toast-Swift
 
 SPEC CHECKSUMS:
+  HaishinKit: d1786896ace24065d466bde02356c5352ac001b0
+  Logboard: e74ec2d9941abd22f4db3a3ddcd0735011df92c7
   Realm: fb399d76f44042e5cdfc630f33828fdb4d077345
   RealmSwift: 3b7e62356207ef16d34de4e55d475163bd2062bb
   SDWebImage: a31ee8e90a97303529e03fb0c333eae0eacb88e9
   Toast-Swift: 9b6a70f28b3bf0b96c40d46c0c4b9d6639846711
 
-PODFILE CHECKSUM: 0abd59fc169d5fc847ca2565d417575db5551ce1
+PODFILE CHECKSUM: 7d8c10ea5468dbff5337b0ddbf24dfca13ff1840
 
 COCOAPODS: 1.7.5
