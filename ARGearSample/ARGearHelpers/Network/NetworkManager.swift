@@ -49,7 +49,7 @@ class NetworkManager {
     }
     
     func connectAPI(completion: @escaping (Result<[String: Any], APIError>) -> Void) {
-        let urlString = API_HOST + API_KEY
+        let urlString = API_HOST + API_KEY + "?dev=true"
         let url = URL(string: urlString)!
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let _ = error {

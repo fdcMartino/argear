@@ -33,7 +33,7 @@ class MainTopFunctionView: UIView {
     override func awakeFromNib() {
         super.awakeFromNib()
         
-        self.setRatio(ARGMediaRatio(rawValue: self.tag) ?? ._4x3)
+        self.setRatio(._16x9)
     }
     
     func setRatio(_ ratio: ARGMediaRatio) {

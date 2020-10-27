@@ -87,6 +87,9 @@ class ContentView: ARGBottomFunctionBaseView {
     
     @IBAction func clearButtonAction(_ sender: UIButton) {
         self.contentsCollectionView.clearContent()
+        // clear exisiting filters
         ContentManager.shared.clearContent()
+        FilterManager.shared.clearFilter()
+        BeautyManager.shared.off()
     }
 }

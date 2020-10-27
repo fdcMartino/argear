@@ -54,7 +54,6 @@ public final class MainViewController: UIViewController {
 //    @IBOutlet weak var contentCancelLabel: UILabel!
     
     // MARK: - UI
-    @IBOutlet weak var splashView: SplashView!
     @IBOutlet weak var touchLockView: UIView!
     @IBOutlet weak var permissionView: PermissionView!
     @IBOutlet weak var settingView: SettingView!
@@ -129,7 +128,6 @@ public final class MainViewController: UIViewController {
 
     override public func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-
 
         runARGSession()
 
@@ -316,7 +314,7 @@ public final class MainViewController: UIViewController {
             self.arMedia.setVideoDeviceOrientation(.portrait)
             self.arMedia.setVideoConnection(connection)
         }
-        arMedia.setMediaRatio(arCamera.ratio)
+        arMedia.setMediaRatio(._16x9)
         arMedia.setVideoBitrate(ARGMediaVideoBitrate(rawValue: self.preferences.videoBitrate) ?? ._4M)
     }
 
@@ -327,8 +325,8 @@ public final class MainViewController: UIViewController {
         //self.mainBottomFunctionView.delegate = self
         self.settingView.delegate = self
 
-        self.ratioView.setRatio(arCamera.ratio)
-        self.settingView.setPreferences(autoSave: self.arMedia.autoSave, showLandmark: self.preferences.showLandmark, videoBitrate: self.preferences.videoBitrate)
+        self.ratioView.setRatio(._16x9)
+        // self.settingView.setPreferences(autoSave: self.arMedia.autoSave, showLandmark: self.preferences.showLandmark, videoBitrate: self.preferences.videoBitrate)
 
         toast_main_position = CGPoint(x: self.view.center.x, y: mainBottomFunctionView.frame.origin.y - 24.0)
 
@@ -348,12 +346,12 @@ public final class MainViewController: UIViewController {
     func refreshRatio() {
         let ratio = arCamera.ratio
 
-        self.ratioView.setRatio(ratio)
-        self.mainTopFunctionView.setRatio(ratio)
+        self.ratioView.setRatio(._16x9)
+        self.mainTopFunctionView.setRatio(._16x9)
 
-        self.setCameraPreview(ratio)
+        self.setCameraPreview(._16x9)
 
-        self.arMedia.setMediaRatio(ratio)
+        self.arMedia.setMediaRatio(._16x9)
     }
 
     func setCameraPreview(_ ratio: ARGMediaRatio) {
@@ -438,11 +436,7 @@ public final class MainViewController: UIViewController {
         argSession?.pause()
     }
 
-    func removeSplashAfter(_ sec: TimeInterval) {
-        DispatchQueue.main.asyncAfter(deadline: .now() + sec) {
-            self.splashView.removeFromSuperview()
-        }
-    }
+    
 }
 
 // MARK: - ARGearSDK ARGSession delegate
@@ -450,45 +444,8 @@ extension MainViewController : ARGSessionDelegate {
 
       public func didUpdate(_ arFrame: ARGFrame) {
 
-        if let splash = self.splashView {
-            splash.removeFromSuperview()
-        }
-
         self.drawARCameraPreview()
-
-        for face in arFrame.faces.faceList {
-           if face.isValid {
-//            NSLog("landmarkcount = %d", face.landmark.landmarkCount)
-            
-            // get face information (landmarkCoordinates , rotation_matrix, translation_vector)
-            // let landmarkcount = face.landmark.landmarkCount
-            // let landmarkCoordinates = face.landmark.landmarkCoordinates
-            // let rotation_matrix = face.rotation_matrix
-            // let translation_vector = face.translation_vector
-           }
-        }
-//        if (arFrame.renderedPixelBuffer != nil) {
-//            var sampleBuffer: CMSampleBuffer? = nil
-//
-//            let scale = CMTimeScale(NSEC_PER_SEC)
-//            let pts = CMTime(value: CMTimeValue(arFrame.timestamp * Double(scale)),
-//                             timescale: scale)
-//            var sampleTimingInfo = CMSampleTimingInfo(duration: CMTime.invalid,
-//                                                presentationTimeStamp: pts,
-//                                                decodeTimeStamp: CMTime.invalid)
-//
-//            var formatDesc: CMVideoFormatDescription? = nil
-//            _ = CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: arFrame.renderedPixelBuffer!, formatDescriptionOut: &formatDesc)
-//
-//            if let formatDesc = formatDesc {
-//                CMSampleBufferCreateReadyWithImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: arFrame.renderedPixelBuffer!, formatDescription: formatDesc, sampleTiming: &sampleTimingInfo, sampleBufferOut: &sampleBuffer)
-//            }
-//
-//            if let sampleBuffer = sampleBuffer {
-//                self.rtmpStream.appendSampleBuffer(sampleBuffer, withType: .video)
-//            }
-//        }
-
+        
         nextFaceFrame = arFrame
         if #available(iOS 11.0, *) {
         } else {
@@ -523,10 +480,10 @@ extension MainViewController {
         switch permissionLevel {
         case .Granted:
             break
-        case .Restricted:
-            self.removeSplashAfter(1.0)
         case .None:
-            self.removeSplashAfter(1.0)
+            break
+        case .Restricted:
+            break
         }
     }
 }
